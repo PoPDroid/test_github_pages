@@ -1,39 +1,363 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GitHub Pages Test</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>security.txt Generator</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 80px 20px;
-      background: #f4f6f8;
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      line-height: 1.5;
+      color: #222;
+    }
+    h1, h2 {
+      margin-bottom: 0.4rem;
+    }
+    .note {
+      background: #f4f7fb;
+      border-left: 4px solid #4a78c2;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .section {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-top: 0.75rem;
+    }
+    input[type="text"],
+    input[type="url"],
+    input[type="datetime-local"],
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.6rem;
+      margin-top: 0.3rem;
+      border: 1px solid #bbb;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    textarea {
+      min-height: 220px;
+      font-family: Consolas, monospace;
+    }
+    .small {
+      font-size: 0.9rem;
+      color: #555;
     }
     button {
-      background: #2563eb;
-      color: white;
+      margin-top: 1rem;
+      margin-right: 0.5rem;
+      padding: 0.7rem 1rem;
       border: none;
-      border-radius: 8px;
-      padding: 15px 25px;
+      border-radius: 5px;
+      background: #1f5fbf;
+      color: white;
       cursor: pointer;
+      font-size: 1rem;
+    }
+    button.secondary {
+      background: #555;
+    }
+    .error {
+      color: #b00020;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+    .success {
+      color: #156c2f;
+      font-weight: bold;
+      margin-top: 1rem;
+    }
+    ul {
+      padding-left: 1.2rem;
     }
   </style>
 </head>
 <body>
-  <h1>🚀 GitHub Pages Works!</h1>
-  <p>My first website hosted on GitHub.</p>
+  <h1>security.txt Generator</h1>
+  <p>Create a valid <code>security.txt</code> file locally in your browser.</p>
 
-  <button onclick="test()">Click to Test</button>
-  <p id="result"></p>
+  <div class="note">
+    <strong>Required fields:</strong> Contact, Expires<br>
+    <strong>Optional fields:</strong> Encryption, Policy, Canonical, Acknowledgments, Preferred-Languages, Hiring
+  </div>
+
+  <form id="securityForm">
+    <div class="section">
+      <h2>1. Contact methods</h2>
+      <p class="small">Add one or more contact methods. The first listed is your preferred option.</p>
+
+      <label for="contact1">Primary Contact (required)</label>
+      <input id="contact1" type="text" placeholder="mailto:security@example.com or https://example.com/security/report" required>
+
+      <label for="contact2">Secondary Contact (optional)</label>
+      <input id="contact2" type="text" placeholder="mailto:bugs@example.com">
+
+      <label for="contact3">Third Contact (optional)</label>
+      <input id="contact3" type="text" placeholder="https://example.com/contact/security">
+    </div>
+
+    <div class="section">
+      <h2>2. Expiry</h2>
+      <p class="small">Required. Keep it under 12 months ahead.</p>
+
+      <label for="expires">Expires (required)</label>
+      <input id="expires" type="datetime-local" required>
+    </div>
+
+    <div class="section">
+      <h2>3. Optional fields</h2>
+
+      <label for="encryption">Encryption URL</label>
+      <input id="encryption" type="url" placeholder="https://example.com/.well-known/pgp-key.asc">
+
+      <label for="policy">Policy URL</label>
+      <input id="policy" type="url" placeholder="https://example.com/security/disclosure-policy">
+
+      <label for="canonical">Canonical URL</label>
+      <input id="canonical" type="url" placeholder="https://example.com/.well-known/security.txt">
+
+      <label for="acknowledgments">Acknowledgments URL</label>
+      <input id="acknowledgments" type="url" placeholder="https://example.com/security/hall-of-fame">
+
+      <label for="preferredLanguages">Preferred-Languages</label>
+      <input id="preferredLanguages" type="text" placeholder="en, fr, de">
+
+      <label for="hiring">Hiring URL</label>
+      <input id="hiring" type="url" placeholder="https://example.com/jobs/security">
+    </div>
+
+    <div class="section">
+      <h2>4. Generate</h2>
+      <button type="button" id="generateBtn">Generate security.txt</button>
+      <button type="button" class="secondary" id="copyBtn">Copy output</button>
+      <button type="button" class="secondary" id="downloadBtn">Download security.txt</button>
+
+      <div id="message"></div>
+
+      <label for="output">Generated output</label>
+      <textarea id="output" readonly></textarea>
+    </div>
+  </form>
 
   <script>
-    function test() {
-      document.getElementById("result").innerText =
-        "✅ JavaScript is working!";
-    }
+    (function () {
+      const contact1El = document.getElementById('contact1');
+      const contact2El = document.getElementById('contact2');
+      const contact3El = document.getElementById('contact3');
+      const expiresEl = document.getElementById('expires');
+      const encryptionEl = document.getElementById('encryption');
+      const policyEl = document.getElementById('policy');
+      const canonicalEl = document.getElementById('canonical');
+      const acknowledgmentsEl = document.getElementById('acknowledgments');
+      const preferredLanguagesEl = document.getElementById('preferredLanguages');
+      const hiringEl = document.getElementById('hiring');
+      const outputEl = document.getElementById('output');
+      const messageEl = document.getElementById('message');
+
+      const generateBtn = document.getElementById('generateBtn');
+      const copyBtn = document.getElementById('copyBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+
+      function setMessage(text, type) {
+        messageEl.className = type || '';
+        messageEl.textContent = text;
+      }
+
+      function setErrorList(errors) {
+        messageEl.className = 'error';
+        messageEl.innerHTML = '<ul><li>' + errors.join('</li><li>') + '</li></ul>';
+      }
+
+      function setDefaultExpiry() {
+        const now = new Date();
+        const future = new Date(now);
+        future.setMonth(future.getMonth() + 6);
+
+        const pad = function (n) {
+          return String(n).padStart(2, '0');
+        };
+
+        const localValue =
+          future.getFullYear() + '-' +
+          pad(future.getMonth() + 1) + '-' +
+          pad(future.getDate()) + 'T' +
+          pad(future.getHours()) + ':' +
+          pad(future.getMinutes());
+
+        expiresEl.value = localValue;
+      }
+
+      function isValidContact(value) {
+        if (!value) return false;
+        return (
+          value.startsWith('mailto:') ||
+          value.startsWith('tel:') ||
+          value.startsWith('http://') ||
+          value.startsWith('https://')
+        );
+      }
+
+      function isValidUrl(value) {
+        if (!value) return true;
+        try {
+          new URL(value);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function generateSecurityTxt() {
+        messageEl.className = '';
+        messageEl.textContent = '';
+
+        const contact1 = contact1El.value.trim();
+        const contact2 = contact2El.value.trim();
+        const contact3 = contact3El.value.trim();
+        const expiresRaw = expiresEl.value.trim();
+
+        const encryption = encryptionEl.value.trim();
+        const policy = policyEl.value.trim();
+        const canonical = canonicalEl.value.trim();
+        const acknowledgments = acknowledgmentsEl.value.trim();
+        const preferredLanguages = preferredLanguagesEl.value.trim();
+        const hiring = hiringEl.value.trim();
+
+        const contacts = [contact1, contact2, contact3].filter(Boolean);
+        const errors = [];
+
+        if (contacts.length === 0) {
+          errors.push('At least one Contact is required.');
+        }
+
+        contacts.forEach(function (c, i) {
+          if (!isValidContact(c)) {
+            errors.push('Contact ' + (i + 1) + ' must start with mailto:, tel:, http://, or https://');
+          }
+        });
+
+        let expiresIso = '';
+        if (!expiresRaw) {
+          errors.push('Expires is required.');
+        } else {
+          const expiresDate = new Date(expiresRaw);
+
+          if (isNaN(expiresDate.getTime())) {
+            errors.push('Expires is not a valid date/time.');
+          } else {
+            expiresIso = expiresDate.toISOString();
+
+            const now = new Date();
+            const max = new Date();
+            max.setFullYear(max.getFullYear() + 1);
+
+            if (expiresDate <= now) {
+              errors.push('Expires must be in the future.');
+            }
+
+            if (expiresDate > max) {
+              errors.push('Expires should be less than 12 months ahead.');
+            }
+          }
+        }
+
+        [
+          ['Encryption', encryption],
+          ['Policy', policy],
+          ['Canonical', canonical],
+          ['Acknowledgments', acknowledgments],
+          ['Hiring', hiring]
+        ].forEach(function (entry) {
+          const name = entry[0];
+          const value = entry[1];
+          if (value && !isValidUrl(value)) {
+            errors.push(name + ' must be a valid URL.');
+          }
+        });
+
+        if (errors.length > 0) {
+          outputEl.value = '';
+          setErrorList(errors);
+          return;
+        }
+
+        const lines = [];
+
+        contacts.forEach(function (c) {
+          lines.push('Contact: ' + c);
+        });
+
+        if (encryption) lines.push('Encryption: ' + encryption);
+        lines.push('Expires: ' + expiresIso);
+        if (acknowledgments) lines.push('Acknowledgments: ' + acknowledgments);
+        if (policy) lines.push('Policy: ' + policy);
+        if (preferredLanguages) lines.push('Preferred-Languages: ' + preferredLanguages);
+        if (hiring) lines.push('Hiring: ' + hiring);
+        if (canonical) lines.push('Canonical: ' + canonical);
+
+        outputEl.value = lines.join('\n')
+
+
+        setMessage('security.txt generated successfully.', 'success');
+      }
+
+      async function copyOutput() {
+        const output = outputEl.value;
+        if (!output) {
+          setMessage('Nothing to copy yet. Generate the file first.', 'error');
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(output);
+          setMessage('Copied to clipboard.', 'success');
+        } catch (e) {
+          outputEl.focus();
+          outputEl.select();
+          setMessage('Clipboard access failed. The text has been selected so you can copy it manually.', 'error');
+        }
+      }
+
+      function downloadFile() {
+        const output = outputEl.value;
+        if (!output) {
+          setMessage('Nothing to download yet. Generate the file first.', 'error');
+          return;
+        }
+
+        const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'security.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        setTimeout(function () {
+          URL.revokeObjectURL(url);
+        }, 1000);
+
+        setMessage('security.txt downloaded.', 'success');
+      }
+
+      generateBtn.addEventListener('click', generateSecurityTxt);
+      copyBtn.addEventListener('click', copyOutput);
+      downloadBtn.addEventListener('click', downloadFile);
+
+      setDefaultExpiry();
+    })();
   </script>
 </body>
 </html>
